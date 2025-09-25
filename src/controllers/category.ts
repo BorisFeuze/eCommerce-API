@@ -9,7 +9,8 @@ type CategoryInputDTO = z.infer<typeof categoryInputSchema>;
 type CategoryDTO = z.infer<typeof categorySchema>;
 
 const getCategorys: RequestHandler<{}, CategoryDTO[]> = async (request, response) => {
-  const { owner } = request.query;
+  const owner = request.sanitQuery?.owner;
+
   let categorys: CategoryDTO[];
   if (owner) {
     categorys = await Category.find({ owner }).populate<CategoryDTO>('userId', 'firstName lastName email').lean();

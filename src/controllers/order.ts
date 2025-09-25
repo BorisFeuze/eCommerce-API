@@ -9,7 +9,8 @@ type OrderInputDTO = z.infer<typeof orderInputSchema>;
 type OrderDTO = z.infer<typeof orderSchema>;
 
 const getOrders: RequestHandler<{}, OrderDTO[]> = async (request, response) => {
-  const { owner } = request.query;
+  const owner = request.sanitQuery?.owner;
+
   let orders: OrderDTO[];
   if (owner) {
     orders = await Order.find({ owner }).populate<OrderDTO>('userId', 'firstName lastName email').lean();

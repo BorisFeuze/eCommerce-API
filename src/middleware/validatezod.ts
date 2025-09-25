@@ -2,7 +2,8 @@ import type { RequestHandler } from 'express';
 import type { ZodObject } from 'zod/v4';
 import z from 'zod/v4';
 
-type ValidationOptions = 'body' | 'params';
+type ValidationOptions = 'body' | 'params' | 'query';
+
 
 const validateZod = (ZodSchema: ZodObject, property: ValidationOptions): RequestHandler => {
   return (request, response, next) => {
@@ -12,7 +13,11 @@ const validateZod = (ZodSchema: ZodObject, property: ValidationOptions): Request
     if (!success) {
       next(new Error(z.prettifyError(error), { cause: { status: 400 } }));
     } else {
-      request[property] = data;
+      if (property === 'query') {
+        request.sanitQuery = data as { owner: string };
+      } else {
+        request[property] = data;
+      }
       next();
     }
   };
