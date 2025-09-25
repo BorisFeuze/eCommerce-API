@@ -1,0 +1,18 @@
+import '#db';
+import express from 'express';
+import { usersRouter, postRouter } from '#routers';
+import { errorHandler } from '#middleware';
+
+const app = express();
+const port = process.env.PORT || 8080;
+
+app.use(express.json()); // Middleware logic
+app.use('/users', usersRouter);
+app.use('/posts', postRouter);
+app.use('*splat', (request, response) => {
+  throw new Error('Not found', { cause: { status: 404 } });
+});
+
+app.use(errorHandler);
+
+app.listen(port, () => console.log(`\x1b[34mMain app listening at http://localhost:${port}\x1b[0m`));
