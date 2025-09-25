@@ -8,20 +8,20 @@ import type { z } from 'zod/v4';
 type ProductInputDTO = z.infer<typeof productInputSchema>;
 type ProductDTO = z.infer<typeof productSchema>;
 
-const getProducts: RequestHandler<{}, ProductDTO[]> = async (req, res) => {
+const getProducts: RequestHandler<{}, ProductDTO[]> = async (request, response) => {
   const products = await Product.find().populate<ProductDTO>('userId', 'firstName lastName email').lean();
-  res.json(products);
+  response.json(products);
 };
 
-const createProduct: RequestHandler<{}, ProductDTO, ProductInputDTO> = async (req, res) => {
+const createProduct: RequestHandler<{}, ProductDTO, ProductInputDTO> = async (req, response) => {
   const product = await Product.create<ProductInputDTO>(req.body);
 
   const populatedProduct = await product.populate<ProductDTO>('userId', 'firstName lastName email');
 
-  res.json(populatedProduct);
+  response.json(populatedProduct);
 };
 
-const getProductById: RequestHandler<{ id: string }, ProductDTO> = async (req, res) => {
+const getProductById: RequestHandler<{ id: string }, ProductDTO> = async (req, response) => {
   const {
     params: { id }
   } = req;
@@ -36,10 +36,10 @@ const getProductById: RequestHandler<{ id: string }, ProductDTO> = async (req, r
     throw new Error('Product not found', { cause: { status: 404 } });
   }
 
-  res.json(product);
+  response.json(product);
 };
 
-const updateProduct: RequestHandler<{ id: string }, ProductDTO, ProductInputDTO> = async (req, res) => {
+const updateProduct: RequestHandler<{ id: string }, ProductDTO, ProductInputDTO> = async (req, response) => {
   const {
     body: { title, content, userId },
     params: { id }
@@ -67,10 +67,10 @@ const updateProduct: RequestHandler<{ id: string }, ProductDTO, ProductInputDTO>
 
   const populatedProduct = await product.populate<ProductDTO>('userId', 'firstName lastName email');
 
-  res.json(populatedProduct);
+  response.json(populatedProduct);
 };
 
-const deleteProduct: RequestHandler<{ id: string }, { message: string }> = async (req, res) => {
+const deleteProduct: RequestHandler<{ id: string }, { message: string }> = async (req, response) => {
   const {
     params: { id }
   } = req;
@@ -83,7 +83,7 @@ const deleteProduct: RequestHandler<{ id: string }, { message: string }> = async
 
   if (!product) throw new Error('Product not found', { cause: { status: 404 } });
 
-  res.json({ message: 'Product deleted' });
+  response.json({ message: 'Product deleted' });
 };
 
 export { getProducts, getProductById, createProduct, updateProduct, deleteProduct };

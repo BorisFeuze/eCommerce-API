@@ -8,23 +8,31 @@ import type { z } from 'zod/v4';
 type OrderInputDTO = z.infer<typeof orderInputSchema>;
 type OrderDTO = z.infer<typeof orderSchema>;
 
-const getOrders: RequestHandler<{}, OrderDTO[]> = async (req, res) => {
-  const orders = await Order.find().populate<OrderDTO>('userId', 'firstName lastName email').lean();
-  res.json(orders);
+const getOrders: RequestHandler<{}, OrderDTO[]> = async (request, response) => {
+  const owner = request.sanitQuery?.owner;
+
+  let orders: OrderDTO[];
+  if (owner) {
+    orders = await Order.find({ owner }).populate<OrderDTO>('userId', 'firstName lastName email').lean();
+    response.json(orders);
+  } else {
+    orders = await Order.find().populate<OrderDTO>('userId', 'firstName lastName email').lean();
+    response.json(orders);
+  }
 };
 
-const createOrder: RequestHandler<{}, OrderDTO, OrderInputDTO> = async (req, res) => {
-  const order = await Order.create<OrderInputDTO>(req.body);
+const createOrder: RequestHandler<{}, OrderDTO, OrderInputDTO> = async (request, response) => {
+  const order = await Order.create<OrderInputDTO>(request.body);
 
   const populatedOrder = await order.populate<OrderDTO>('userId', 'firstName lastName email');
 
-  res.json(populatedOrder);
+  response.json(populatedOrder);
 };
 
-const getOrderById: RequestHandler<{ id: string }, OrderDTO> = async (req, res) => {
+const getOrderById: RequestHandler<{ id: string }, OrderDTO> = async (request, response) => {
   const {
     params: { id }
-  } = req;
+  } = request;
 
   if (!isValidObjectId(id)) {
     throw new Error('Invalid ID', { cause: { status: 400 } });
@@ -36,14 +44,14 @@ const getOrderById: RequestHandler<{ id: string }, OrderDTO> = async (req, res) 
     throw new Error('Order not found', { cause: { status: 404 } });
   }
 
-  res.json(order);
+  response.json(order);
 };
 
-const updateOrder: RequestHandler<{ id: string }, OrderDTO, OrderInputDTO> = async (req, res) => {
+const updateOrder: RequestHandler<{ id: string }, OrderDTO, OrderInputDTO> = async (request, response) => {
   const {
     body: { title, content, userId },
     params: { id }
-  } = req;
+  } = request;
 
   if (!isValidObjectId(id)) {
     throw new Error('Invalid ID', { cause: { status: 400 } });
@@ -67,13 +75,13 @@ const updateOrder: RequestHandler<{ id: string }, OrderDTO, OrderInputDTO> = asy
 
   const populatedOrder = await order.populate<OrderDTO>('userId', 'firstName lastName email');
 
-  res.json(populatedOrder);
+  response.json(populatedOrder);
 };
 
-const deleteOrder: RequestHandler<{ id: string }, { message: string }> = async (req, res) => {
+const deleteOrder: RequestHandler<{ id: string }, { message: string }> = async (request, response) => {
   const {
     params: { id }
-  } = req;
+  } = request;
 
   if (!isValidObjectId(id)) {
     throw new Error('Invalid ID', { cause: { status: 400 } });
@@ -83,7 +91,7 @@ const deleteOrder: RequestHandler<{ id: string }, { message: string }> = async (
 
   if (!order) throw new Error('Order not found', { cause: { status: 404 } });
 
-  res.json({ message: 'Order deleted' });
+  response.json({ message: 'Order deleted' });
 };
 
 export { getOrders, getOrderById, createOrder, updateOrder, deleteOrder };

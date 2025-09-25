@@ -8,23 +8,30 @@ import type { z } from 'zod/v4';
 type CategoryInputDTO = z.infer<typeof categoryInputSchema>;
 type CategoryDTO = z.infer<typeof categorySchema>;
 
-const getCategorys: RequestHandler<{}, CategoryDTO[]> = async (req, res) => {
-  const categorys = await Category.find().populate<CategoryDTO>('userId', 'firstName lastName email').lean();
-  res.json(categorys);
+const getCategorys: RequestHandler<{}, CategoryDTO[]> = async (request, response) => {
+  const owner = request.sanitQuery?.owner;
+  let categorys: CategoryDTO[];
+  if (owner) {
+    categorys = await Category.find({ owner }).populate<CategoryDTO>('userId', 'firstName lastName email').lean();
+    response.json(categorys);
+  } else {
+    categorys = await Category.find().populate<CategoryDTO>('userId', 'firstName lastName email').lean();
+    response.json(categorys);
+  }
 };
 
-const createCategory: RequestHandler<{}, CategoryDTO, CategoryInputDTO> = async (req, res) => {
-  const category = await Category.create<CategoryInputDTO>(req.body);
+const createCategory: RequestHandler<{}, CategoryDTO, CategoryInputDTO> = async (request, response) => {
+  const category = await Category.create<CategoryInputDTO>(request.body);
 
   const populatedCategory = await category.populate<CategoryDTO>('userId', 'firstName lastName email');
 
-  res.json(populatedCategory);
+  response.json(populatedCategory);
 };
 
-const getCategoryById: RequestHandler<{ id: string }, CategoryDTO> = async (req, res) => {
+const getCategoryById: RequestHandler<{ id: string }, CategoryDTO> = async (request, response) => {
   const {
     params: { id }
-  } = req;
+  } = request;
 
   if (!isValidObjectId(id)) {
     throw new Error('Invalid ID', { cause: { status: 400 } });
@@ -36,14 +43,14 @@ const getCategoryById: RequestHandler<{ id: string }, CategoryDTO> = async (req,
     throw new Error('Category not found', { cause: { status: 404 } });
   }
 
-  res.json(category);
+  response.json(category);
 };
 
-const updateCategory: RequestHandler<{ id: string }, CategoryDTO, CategoryInputDTO> = async (req, res) => {
+const updateCategory: RequestHandler<{ id: string }, CategoryDTO, CategoryInputDTO> = async (request, response) => {
   const {
     body: { title, content, userId },
     params: { id }
-  } = req;
+  } = request;
 
   if (!isValidObjectId(id)) {
     throw new Error('Invalid ID', { cause: { status: 400 } });
@@ -67,13 +74,13 @@ const updateCategory: RequestHandler<{ id: string }, CategoryDTO, CategoryInputD
 
   const populatedCategory = await category.populate<CategoryDTO>('userId', 'firstName lastName email');
 
-  res.json(populatedCategory);
+  response.json(populatedCategory);
 };
 
-const deleteCategory: RequestHandler<{ id: string }, { message: string }> = async (req, res) => {
+const deleteCategory: RequestHandler<{ id: string }, { message: string }> = async (request, response) => {
   const {
     params: { id }
-  } = req;
+  } = request;
 
   if (!isValidObjectId(id)) {
     throw new Error('Invalid ID', { cause: { status: 400 } });
@@ -83,7 +90,7 @@ const deleteCategory: RequestHandler<{ id: string }, { message: string }> = asyn
 
   if (!category) throw new Error('Category not found', { cause: { status: 404 } });
 
-  res.json({ message: 'Category deleted' });
+  response.json({ message: 'Category deleted' });
 };
 
 export { getCategorys, getCategoryById, createCategory, updateCategory, deleteCategory };
