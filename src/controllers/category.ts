@@ -10,6 +10,7 @@ type CategoryDTO = z.infer<typeof categorySchema>;
 const getCategories: RequestHandler = async (request, response) => {
   const categories = await Category.find().lean();
 
+
   const { success, data, error } = categorySchemaArray.safeParse(categories);
 
   if (!success) {
@@ -17,6 +18,7 @@ const getCategories: RequestHandler = async (request, response) => {
   }
 
   response.json({ message: 'List of Categories', data });
+
 };
 
 const createCategory: RequestHandler<{}, {}, CategoryInputDTO> = async (request, response) => {
