@@ -1,5 +1,6 @@
 import z from 'zod/v4';
 import { dbEntrySchema } from './shared.ts';
+import { Types } from 'mongoose';
 
 const userInputSchema = z.strictObject({
   name: z.string().min(1, 'user_Name is required').max(255).trim(),
@@ -9,12 +10,15 @@ const userInputSchema = z.strictObject({
 
 const userSchema = z
   .strictObject({
-    ...userInputSchema.shape,
-    ...dbEntrySchema.shape
+    ...dbEntrySchema.shape,
+    name: z.string().min(1, 'user_Name is required').max(255).trim(),
+    email: z.email({ pattern: z.regexes.email }).trim().toLowerCase()
   })
   .transform(({ _id, ...rest }) => ({
     id: _id,
     ...rest
   }));
 
-export { userInputSchema, userSchema };
+const userSchemaArray = z.array(userSchema);
+
+export { userInputSchema, userSchema, userSchemaArray };
