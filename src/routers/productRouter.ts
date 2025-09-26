@@ -1,15 +1,19 @@
-import { createProduct, deleteProduct, getProductById, getProducts, updateProduct } from '#controllers';
+import { getProducts, deleteProduct, updateProduct, createProduct, getProductById } from '#controllers';
 import { Router } from 'express';
 import { validateZod } from '#middleware';
-import { productSchema, updateProductSchema } from '#schemas';
+import { productInputSchema, querySchema, paramSchema } from '#schemas';
 
 const productRouter = Router();
 
-productRouter.route('/').get(getProducts).post(validateZod(productSchema), createProduct);
+productRouter
+  .route('/')
+  .get(validateZod(querySchema, 'query'), getProducts)
+  .post(validateZod(productInputSchema, 'body'), createProduct);
+productRouter.use('./:id', validateZod(paramSchema, 'params'));
 productRouter
   .route('/:id')
   .get(getProductById)
-  .put(validateZod(updateProductSchema), updateProduct)
+  .put(validateZod(productInputSchema, 'body'), updateProduct)
   .delete(deleteProduct);
 
 export default productRouter;

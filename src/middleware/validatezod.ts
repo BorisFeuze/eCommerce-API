@@ -14,7 +14,7 @@ const validateZod = (ZodSchema: ZodObject, property: ValidationOptions): Request
       next(new Error(z.prettifyError(error), { cause: { status: 400 } }));
     } else {
       if (property === 'query') {
-        request.sanitQuery = data as { owner: string };
+        request.sanitQuery = data;
       } else {
         request[property] = data;
       }

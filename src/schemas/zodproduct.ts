@@ -1,25 +1,23 @@
-import z from 'zod/v4';
-import { isValidObjectId, Types } from 'mongoose';
-import { userInputSchema } from './zodusers';
-import { dbEntrySchema } from './shared';
+import { z } from 'zod/v4';
+import { isValidObjectId } from 'mongoose';
+import { dbEntrySchema } from './shared.ts';
 
 const productInputSchema = z.strictObject({
-  // title: z.string().min(1, 'Title is required').max(1000).trim(),
-  // content: z.string().min(1).trim(),
-  // userId: z.string().refine(value => {
-  //   return isValidObjectId(value);
-  // }, 'Invalid owner ID')
+  name: z.string().min(1, 'Product_name is required').max(255).trim(),
+  description: z.string().min(1).trim(),
+  categoryId: z.string().refine(value => {
+    return isValidObjectId(value);
+  }, 'Invalid category ID')
 });
 
-const updateProductSchema = productInputSchema.omit({ userId: true });
+const productSchema = z
+  .strictObject({
+    ...productInputSchema.shape,
+    ...dbEntrySchema.shape
+  })
+  .transform(({ _id, ...rest }) => ({
+    id: _id,
+    ...rest
+  }));
 
-const productSchema = z.strictObject({
-  // ...productInputSchema.shape,
-  // ...dbEntrySchema.shape,
-  // userId: z.object({
-  //   _id: z.instanceof(Types.ObjectId),
-  //   ...userInputSchema.shape
-  // })
-});
-
-export { productInputSchema, updateProductSchema, productSchema };
+export { productInputSchema, productSchema };

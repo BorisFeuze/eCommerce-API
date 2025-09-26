@@ -1,28 +1,28 @@
 import { Schema, model } from 'mongoose';
 
 const productSchema = new Schema(
-  // {
-  //   title: {
-  //     type: String,
-  //     required: [true, 'Title is required'],
-  //     trim: true
-  //   },
-  //   content: {
-  //     type: String,
-  //     required: [true, 'Content is required'],
-  //     trim: true
-  //   },
-  //   userId: {
-  //     type: Schema.Types.ObjectId,
-  //     ref: 'User',
-  //     required: [true, 'User ID is required']
-  //   }
-  // },
   {
-    timestamps: true
+    name: {
+      type: String,
+      required: [true, 'name is required'],
+      trim: true
+    },
+    description: {
+      type: String,
+      required: [true, 'description is required'],
+      trim: true
+    },
+    categoryId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Category',
+      required: [true, 'category ID is required']
+    }
+  },
+  {
+    timestamps: { createdAt: true, updatedAt: false }
   }
 );
 
-const Product = model('Product', productSchema);
+const Product = model('product', productSchema);
 
 export default Product;
