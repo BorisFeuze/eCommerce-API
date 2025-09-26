@@ -1,4 +1,4 @@
-import { Product } from '#models';
+import { Category, Product } from '#models';
 import type { RequestHandler } from 'express';
 import { isValidObjectId } from 'mongoose';
 import { ObjectId } from 'mongodb';
@@ -9,14 +9,28 @@ type ProductInputDTO = z.infer<typeof productInputSchema>;
 type ProductDTO = z.infer<typeof productSchema>;
 
 const getProducts: RequestHandler<{}, ProductDTO[]> = async (request, response) => {
-  const products = await Product.find().populate<ProductDTO>('userId', 'firstName lastName email').lean();
+  const categoryId = request.sanitQuery?.categoryId;
+
+  let products: ProductDTO[];
+
+  if (categoryId) {
+    products = await Product.find({ categoryId }).populate<ProductDTO>('categoryId', 'mame').lean();
+  } else {
+    products = await Product.find().populate<ProductDTO>('categoryId', 'mame').lean();
+  }
   response.json(products);
 };
 
-const createProduct: RequestHandler<{}, ProductDTO, ProductInputDTO> = async (req, response) => {
-  const product = await Product.create<ProductInputDTO>(req.body);
+const createProduct: RequestHandler<{}, ProductDTO, ProductInputDTO> = async (request, response) => {
+  const { name, description, categoryId } = request.body;
 
-  const populatedProduct = await product.populate<ProductDTO>('userId', 'firstName lastName email');
+  const categoryExists = await Category.exists({ _id: categoryId });
+
+  if (!categoryExists) throw new Error('product_category do not exist', { cause: { status: 404 } });
+
+  const product = await Product.create<ProductInputDTO>({ name, description, categoryId });
+
+  const populatedProduct = await product.populate<ProductDTO>('categoryId', 'name');
 
   response.json(populatedProduct);
 };
@@ -30,7 +44,7 @@ const getProductById: RequestHandler<{ id: string }, ProductDTO> = async (req, r
     throw new Error('Invalid ID', { cause: { status: 400 } });
   }
 
-  const product = await Product.findById(id).populate<ProductDTO>('userId', 'firstName lastName email');
+  const product = await Product.findById(id).populate<ProductDTO>('categoryId', 'name');
 
   if (!product) {
     throw new Error('Product not found', { cause: { status: 404 } });
@@ -41,7 +55,7 @@ const getProductById: RequestHandler<{ id: string }, ProductDTO> = async (req, r
 
 const updateProduct: RequestHandler<{ id: string }, ProductDTO, ProductInputDTO> = async (req, response) => {
   const {
-    body: { title, content, userId },
+    body: { name, description, categoryId },
     params: { id }
   } = req;
 
@@ -55,17 +69,17 @@ const updateProduct: RequestHandler<{ id: string }, ProductDTO, ProductInputDTO>
     throw new Error('Product not found', { cause: { status: 404 } });
   }
 
-  if (userId !== product.userId.toString()) {
-    throw new Error('You are not authorized to update this product', { cause: { status: 403 } });
+  if (categoryId !== product.categoryId.toString()) {
+    throw new Error('Product is not from the right category', { cause: { status: 400 } });
   }
 
-  product.title = title;
-  product.content = content;
-  product.userId = ObjectId.createFromHexString(userId);
+  product.name = name;
+  product.description = description;
+  product.categoryId = ObjectId.createFromHexString(categoryId);
 
   await product.save();
 
-  const populatedProduct = await product.populate<ProductDTO>('userId', 'firstName lastName email');
+  const populatedProduct = await product.populate<ProductDTO>('categoryId', 'name');
 
   response.json(populatedProduct);
 };

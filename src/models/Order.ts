@@ -1,37 +1,34 @@
 import { Schema, model } from 'mongoose';
 
 const orderSchema = new Schema(
-  // {
-  //   firstName: {
-  //     type: String,
-  //     required: [true, 'First name is required'],
-  //     trim: true
-  //   },
-  //   lastName: {
-  //     type: String,
-  //     required: [true, 'Last name is required'],
-  //     trim: true
-  //   },
-  //   email: {
-  //     type: String,
-  //     required: [true, 'Email is required'],
-  //     unique: true,
-  //     trim: true,
-  //     match: [/^\S+@\S+\.\S+$/, 'Email is not valid']
-  //   },
-  //   password: {
-  //     type: String,
-  //     required: [true, 'Password is required'],
-  //     select: false,
-  //     minlength: [6, 'Password must be at least 6 characters long']
-  //   },
-  //   isActive: {
-  //     type: Boolean,
-  //     default: true
-  //   }
-  // },
   {
-    timestamps: true
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: [true, 'user ID is required']
+    },
+    products: [
+      {
+        productId: {
+          type: Schema.Types.ObjectId,
+          ref: 'Product',
+          required: [true, 'product ID is required']
+        }
+      },
+      {
+        quantity: {
+          type: Number,
+          required: [true, 'quantity of product is required']
+        }
+      }
+    ],
+
+    total: {
+      type: Number
+    }
+  },
+  {
+    timestamps: { createdAt: true, updatedAt: true }
   }
 );
 
