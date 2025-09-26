@@ -15,4 +15,6 @@ const categorySchema = z
     ...rest
   }));
 
-export { categoryInputSchema, categorySchema };
+const categorySchemaArray = z.array(categorySchema);
+
+export { categoryInputSchema, categorySchema, categorySchemaArray };

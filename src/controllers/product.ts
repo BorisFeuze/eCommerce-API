@@ -2,8 +2,8 @@ import { Category, Product } from '#models';
 import type { RequestHandler } from 'express';
 import { isValidObjectId } from 'mongoose';
 import { ObjectId } from 'mongodb';
-import { productSchema, productInputSchema } from '#schemas';
-import type { z } from 'zod/v4';
+import { productSchema, productInputSchema, productSchemaArray } from '#schemas';
+import { z } from 'zod/v4';
 
 type ProductInputDTO = z.infer<typeof productInputSchema>;
 type ProductDTO = z.infer<typeof productSchema>;
@@ -18,7 +18,13 @@ const getProducts: RequestHandler = async (request, response) => {
   } else {
     products = await Product.find().populate<ProductDTO>('categoryId', 'mame').lean();
   }
-  response.json({ message: 'List of products', products });
+  const { success, data, error } = productSchemaArray.safeParse(products);
+
+  if (!success) {
+    console.error(z.prettifyError(error));
+  }
+
+  response.json({ message: 'List of products', data });
 };
 
 const createProduct: RequestHandler = async (request, response) => {
@@ -30,9 +36,7 @@ const createProduct: RequestHandler = async (request, response) => {
 
   const product = await Product.create<ProductInputDTO>({ name, description, categoryId });
 
-  const populatedProduct = await product.populate<ProductDTO>('categoryId', 'name');
-
-  response.json({ message: 'created product', populatedProduct });
+  response.json({ message: 'product created' });
 };
 
 const getProductById: RequestHandler<{ id: string }> = async (req, response) => {
@@ -44,13 +48,19 @@ const getProductById: RequestHandler<{ id: string }> = async (req, response) => 
     throw new Error('Invalid ID', { cause: { status: 400 } });
   }
 
-  const product = await Product.findById(id).populate<ProductDTO>('categoryId', 'name');
+  const product = await Product.findById(id).populate<ProductDTO>('categoryId', 'name').lean();
 
   if (!product) {
     throw new Error('Product not found', { cause: { status: 404 } });
   }
 
-  response.json({ message: 'searched product', product });
+  const { success, data, error } = productSchemaArray.safeParse(product);
+
+  if (!success) {
+    console.error(z.prettifyError(error));
+  }
+
+  response.json({ message: 'searched product', data });
 };
 
 const updateProduct: RequestHandler<{ id: string }, {}, ProductInputDTO> = async (req, response) => {
@@ -79,9 +89,7 @@ const updateProduct: RequestHandler<{ id: string }, {}, ProductInputDTO> = async
 
   await product.save();
 
-  const populatedProduct = await product.populate<ProductDTO>('categoryId', 'name');
-
-  response.json({ message: 'updated product', populatedProduct });
+  response.json({ message: 'product updated' });
 };
 
 const deleteProduct: RequestHandler<{ id: string }, { message: string }> = async (req, response) => {

@@ -1,11 +1,11 @@
-import { createCategory, deleteCategory, getCategoryById, getCategorys, updateCategory } from '#controllers';
+import { createCategory, deleteCategory, getCategoryById, getCategories, updateCategory } from '#controllers';
 import { Router } from 'express';
 import { validateZod } from '#middleware';
 import { categoryInputSchema, paramSchema } from '#schemas';
 
 const categorysRouter = Router();
 
-categorysRouter.route('/').get(getCategorys).post(validateZod(categoryInputSchema, 'body'), createCategory);
+categorysRouter.route('/').get(getCategories).post(validateZod(categoryInputSchema, 'body'), createCategory);
 categorysRouter.use('/:id', validateZod(paramSchema, 'params'));
 categorysRouter
   .route('/:id')

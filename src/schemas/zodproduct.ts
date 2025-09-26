@@ -20,4 +20,6 @@ const productSchema = z
     ...rest
   }));
 
-export { productInputSchema, productSchema };
+const productSchemaArray = z.array(productSchema);
+
+export { productInputSchema, productSchema, productSchemaArray };

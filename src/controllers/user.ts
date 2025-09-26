@@ -1,15 +1,22 @@
 import { User } from '#models';
 import type { RequestHandler } from 'express';
 import { isValidObjectId } from 'mongoose';
-import type { z } from 'zod/v4';
-import { userSchema, userInputSchema } from '#schemas';
+import { z } from 'zod/v4';
+import { userSchema, userInputSchema, userSchemaArray } from '#schemas';
 
 type UserInputDTO = z.infer<typeof userInputSchema>;
 type UserDTO = z.infer<typeof userSchema>;
 
 const getUsers: RequestHandler = async (request, response) => {
   const users = await User.find().select('-password').lean();
-  response.json({ massege: 'List of users', users });
+
+  const { success, data, error } = userSchemaArray.safeParse(users);
+
+  if (!success) {
+    console.error(z.prettifyError(error));
+  }
+
+  response.json({ massege: 'List of users', data });
 };
 
 const createUser: RequestHandler<{}, {}, UserInputDTO> = async (request, response) => {
@@ -21,7 +28,7 @@ const createUser: RequestHandler<{}, {}, UserInputDTO> = async (request, respons
   }
   const user = await User.create<UserInputDTO>({ name, email, password });
 
-  response.json({ message: 'created user', user });
+  response.json({ message: 'user created' });
 };
 
 const getUserById: RequestHandler<{ id: string }> = async (request, response) => {
@@ -33,11 +40,18 @@ const getUserById: RequestHandler<{ id: string }> = async (request, response) =>
     throw new Error('Invalid ID', { cause: { status: 400 } });
   }
 
-  const user = await User.findById(id);
+  const user = await User.findById(id).select('-password').lean();
   if (!user) {
     throw new Error('User not found', { cause: { status: 404 } });
   }
-  response.json({ message: 'searched user', user });
+
+  const { success, data, error } = userSchema.safeParse(user);
+
+  if (!success) {
+    console.error(z.prettifyError(error));
+  }
+
+  response.json({ message: 'searched user', data });
 };
 
 const updateUser: RequestHandler<{ id: string }> = async (request, response) => {
@@ -62,7 +76,7 @@ const updateUser: RequestHandler<{ id: string }> = async (request, response) => 
 
   await user.save();
 
-  response.json({ message: 'updated user', user });
+  response.json({ message: 'user updated' });
 };
 
 const deleteUser: RequestHandler<{ id: string }, { message: string }> = async (request, response) => {
