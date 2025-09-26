@@ -8,27 +8,21 @@ import type { z } from 'zod/v4';
 type CategoryInputDTO = z.infer<typeof categoryInputSchema>;
 type CategoryDTO = z.infer<typeof categorySchema>;
 
-const getCategorys: RequestHandler<{}, CategoryDTO[]> = async (request, response) => {
-  const owner = request.sanitQuery?.owner;
-  let categorys: CategoryDTO[];
-  if (owner) {
-    categorys = await Category.find({ owner }).populate<CategoryDTO>('userId', 'firstName lastName email').lean();
-    response.json(categorys);
-  } else {
-    categorys = await Category.find().populate<CategoryDTO>('userId', 'firstName lastName email').lean();
-    response.json(categorys);
-  }
+const getCategorys: RequestHandler = async (request, response) => {
+  const categories = await Category.find().lean();
+
+  response.json({ message: 'List of Categories', categories });
 };
 
-const createCategory: RequestHandler<{}, CategoryDTO, CategoryInputDTO> = async (request, response) => {
-  const category = await Category.create<CategoryInputDTO>(request.body);
+const createCategory: RequestHandler<{}, {}, CategoryInputDTO> = async (request, response) => {
+  const { name } = request.body;
 
-  const populatedCategory = await category.populate<CategoryDTO>('userId', 'firstName lastName email');
+  const category = await Category.create<CategoryInputDTO>({ name });
 
-  response.json(populatedCategory);
+  response.json({ message: 'created category', category });
 };
 
-const getCategoryById: RequestHandler<{ id: string }, CategoryDTO> = async (request, response) => {
+const getCategoryById: RequestHandler<{ id: string }> = async (request, response) => {
   const {
     params: { id }
   } = request;
@@ -37,18 +31,18 @@ const getCategoryById: RequestHandler<{ id: string }, CategoryDTO> = async (requ
     throw new Error('Invalid ID', { cause: { status: 400 } });
   }
 
-  const category = await Category.findById(id).populate<CategoryDTO>('userId', 'firstName lastName email');
+  const category = await Category.findById(id).lean();
 
   if (!category) {
     throw new Error('Category not found', { cause: { status: 404 } });
   }
 
-  response.json(category);
+  response.json({ message: 'searched category', category });
 };
 
-const updateCategory: RequestHandler<{ id: string }, CategoryDTO, CategoryInputDTO> = async (request, response) => {
+const updateCategory: RequestHandler<{ id: string }> = async (request, response) => {
   const {
-    body: { title, content, userId },
+    body: { name },
     params: { id }
   } = request;
 
@@ -62,19 +56,11 @@ const updateCategory: RequestHandler<{ id: string }, CategoryDTO, CategoryInputD
     throw new Error('Category not found', { cause: { status: 404 } });
   }
 
-  if (userId !== category.userId.toString()) {
-    throw new Error('You are not authorized to update this category', { cause: { status: 403 } });
-  }
-
-  category.title = title;
-  category.content = content;
-  category.userId = ObjectId.createFromHexString(userId);
+  category.name = name;
 
   await category.save();
 
-  const populatedCategory = await category.populate<CategoryDTO>('userId', 'firstName lastName email');
-
-  response.json(populatedCategory);
+  response.json({ message: 'updated category', category });
 };
 
 const deleteCategory: RequestHandler<{ id: string }, { message: string }> = async (request, response) => {

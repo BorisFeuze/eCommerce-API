@@ -9,7 +9,7 @@ productRouter
   .route('/')
   .get(validateZod(querySchema, 'query'), getProducts)
   .post(validateZod(productInputSchema, 'body'), createProduct);
-productRouter.use('./:id', validateZod(paramSchema, 'params'));
+productRouter.use('/:id', validateZod(paramSchema, 'params'));
 productRouter
   .route('/:id')
   .get(getProductById)

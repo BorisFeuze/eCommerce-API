@@ -8,7 +8,7 @@ import type { z } from 'zod/v4';
 type ProductInputDTO = z.infer<typeof productInputSchema>;
 type ProductDTO = z.infer<typeof productSchema>;
 
-const getProducts: RequestHandler<{}, ProductDTO[]> = async (request, response) => {
+const getProducts: RequestHandler = async (request, response) => {
   const categoryId = request.sanitQuery?.categoryId;
 
   let products: ProductDTO[];
@@ -18,10 +18,10 @@ const getProducts: RequestHandler<{}, ProductDTO[]> = async (request, response) 
   } else {
     products = await Product.find().populate<ProductDTO>('categoryId', 'mame').lean();
   }
-  response.json(products);
+  response.json({ message: 'List of products', products });
 };
 
-const createProduct: RequestHandler<{}, ProductDTO, ProductInputDTO> = async (request, response) => {
+const createProduct: RequestHandler = async (request, response) => {
   const { name, description, categoryId } = request.body;
 
   const categoryExists = await Category.exists({ _id: categoryId });
@@ -32,10 +32,10 @@ const createProduct: RequestHandler<{}, ProductDTO, ProductInputDTO> = async (re
 
   const populatedProduct = await product.populate<ProductDTO>('categoryId', 'name');
 
-  response.json(populatedProduct);
+  response.json({ message: 'created product', populatedProduct });
 };
 
-const getProductById: RequestHandler<{ id: string }, ProductDTO> = async (req, response) => {
+const getProductById: RequestHandler<{ id: string }> = async (req, response) => {
   const {
     params: { id }
   } = req;
@@ -50,10 +50,10 @@ const getProductById: RequestHandler<{ id: string }, ProductDTO> = async (req, r
     throw new Error('Product not found', { cause: { status: 404 } });
   }
 
-  response.json(product);
+  response.json({ message: 'searched product', product });
 };
 
-const updateProduct: RequestHandler<{ id: string }, ProductDTO, ProductInputDTO> = async (req, response) => {
+const updateProduct: RequestHandler<{ id: string }, {}, ProductInputDTO> = async (req, response) => {
   const {
     body: { name, description, categoryId },
     params: { id }
@@ -81,7 +81,7 @@ const updateProduct: RequestHandler<{ id: string }, ProductDTO, ProductInputDTO>
 
   const populatedProduct = await product.populate<ProductDTO>('categoryId', 'name');
 
-  response.json(populatedProduct);
+  response.json({ message: 'updated product', populatedProduct });
 };
 
 const deleteProduct: RequestHandler<{ id: string }, { message: string }> = async (req, response) => {

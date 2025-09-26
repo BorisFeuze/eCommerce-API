@@ -16,10 +16,10 @@ app.use(
     exposedHeaders: ['WWW-Authenticate'] // needed to send the 'refresh trigger''
   })
 );
-// app.use('/users', userRouter);
-// app.use('/posts', productRouter);
-// app.use('/posts', orderRouter);
-// app.use('/posts', categoryRouter);
+app.use('/users', userRouter);
+app.use('/products', productRouter);
+app.use('/orders', orderRouter);
+app.use('/categories', categoryRouter);
 app.use('*splat', (request, response) => {
   throw new Error('Not found', { cause: { status: 404 } });
 });
