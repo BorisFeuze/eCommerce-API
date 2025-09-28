@@ -1,60 +1,95 @@
-import { Order } from '#models';
+import { Order, Product, User } from '#models';
 import type { RequestHandler } from 'express';
 import { isValidObjectId } from 'mongoose';
 import { ObjectId } from 'mongodb';
-import { orderSchema, orderInputSchema } from '#schemas';
-import type { z } from 'zod/v4';
+import { orderSchema, orderInputSchema, orderSchemaArray, productItemSchema } from '#schemas';
+import { z } from 'zod/v4';
+import type { OrderDTO, OrderInputDTO, ProductDTO, ProductInputDTO } from '#types';
 
-type OrderInputDTO = z.infer<typeof orderInputSchema>;
-type OrderDTO = z.infer<typeof orderSchema>;
+const getOrders: RequestHandler = async (request, response) => {
+  const orders = await Order.find()
+    .populate('userId', 'name email')
+    .populate('products.productId', 'name price')
+    .lean();
 
-const getOrders: RequestHandler<{}, OrderDTO[]> = async (request, response) => {
-  const owner = request.sanitQuery?.owner;
+  const { success, data, error } = orderSchemaArray.safeParse(orders);
 
-  let orders: OrderDTO[];
-  if (owner) {
-    orders = await Order.find({ owner }).populate<OrderDTO>('userId', 'firstName lastName email').lean();
-    response.json(orders);
-  } else {
-    orders = await Order.find().populate<OrderDTO>('userId', 'firstName lastName email').lean();
-    response.json(orders);
+  if (!success) {
+    throw new Error(z.prettifyError(error), { cause: { status: 400 } });
   }
+  response.json({ message: 'List of products', data /*orders*/ });
 };
 
-const createOrder: RequestHandler<{}, OrderDTO, OrderInputDTO> = async (request, response) => {
-  const order = await Order.create<OrderInputDTO>(request.body);
+const createOrder: RequestHandler<{}, {}, OrderInputDTO> = async (request, response) => {
+  const {
+    body: { userId, products, total }
+  } = request;
+  console.log(request.body);
+  const _id = userId;
 
-  const populatedOrder = await order.populate<OrderDTO>('userId', 'firstName lastName email');
+  const userExists = await User.exists({ _id });
+  if (!userExists) throw new Error('userID not found', { cause: { status: 404 } });
 
-  response.json(populatedOrder);
+  let totalCost = 0;
+
+  for (let product of products) {
+    const { productId, quantity } = product;
+
+    const _id = productId;
+    const productExists = await Product.exists({ _id });
+
+    if (!productExists) throw new Error('product not found', { cause: { status: 404 } });
+
+    // console.log(productExists);
+
+    const { price } = await Product.findById<ProductInputDTO>({ _id });
+
+    // console.log(price);
+
+    totalCost += quantity * Number(price);
+  }
+
+  const order = await Order.create({ ...request.body, total: totalCost });
+
+  const populatedOrder = await order.populate('products.productId', 'name price');
+
+  console.log(populatedOrder);
+
+  response.json({ message: 'order created' });
 };
 
-const getOrderById: RequestHandler<{ id: string }, OrderDTO> = async (request, response) => {
+const getOrderById: RequestHandler<{ id: string }> = async (request, response) => {
   const {
     params: { id }
   } = request;
 
   if (!isValidObjectId(id)) {
-    throw new Error('Invalid ID', { cause: { status: 400 } });
+    throw new Error('Invalid orderID', { cause: { status: 400 } });
   }
 
-  const order = await Order.findById(id).populate<OrderDTO>('userId', 'firstName lastName email');
+  const order = await Order.findById(id).populate('userId', 'name email').populate('products.productId', 'name price');
 
   if (!order) {
     throw new Error('Order not found', { cause: { status: 404 } });
   }
 
-  response.json(order);
+  const { success, data, error } = orderSchema.safeParse(order);
+
+  if (!success) {
+    console.error(z.prettifyError(error));
+  }
+
+  response.json({ message: 'searched product', data });
 };
 
-const updateOrder: RequestHandler<{ id: string }, OrderDTO, OrderInputDTO> = async (request, response) => {
+const updateOrder: RequestHandler<{ id: string }, {}, OrderInputDTO> = async (request, response) => {
   const {
-    body: { title, content, userId },
+    body: { userId, products, total },
     params: { id }
   } = request;
 
   if (!isValidObjectId(id)) {
-    throw new Error('Invalid ID', { cause: { status: 400 } });
+    throw new Error('Invalid orderID', { cause: { status: 400 } });
   }
 
   const order = await Order.findById(id);
@@ -67,15 +102,17 @@ const updateOrder: RequestHandler<{ id: string }, OrderDTO, OrderInputDTO> = asy
     throw new Error('You are not authorized to update this order', { cause: { status: 403 } });
   }
 
-  order.title = title;
-  order.content = content;
   order.userId = ObjectId.createFromHexString(userId);
+  order.products = products[{ productId, quantity }];
+  order.total = total;
 
   await order.save();
 
-  const populatedOrder = await order.populate<OrderDTO>('userId', 'firstName lastName email');
+  const data = await order.populate('userId', 'name email');
 
-  response.json(populatedOrder);
+  const populatedOrder = await data.populate('products.productId', 'name price');
+
+  response.json({ message: 'order updated' });
 };
 
 const deleteOrder: RequestHandler<{ id: string }, { message: string }> = async (request, response) => {
@@ -84,7 +121,7 @@ const deleteOrder: RequestHandler<{ id: string }, { message: string }> = async (
   } = request;
 
   if (!isValidObjectId(id)) {
-    throw new Error('Invalid ID', { cause: { status: 400 } });
+    throw new Error('Invalid orderID', { cause: { status: 400 } });
   }
 
   const order = await Order.findByIdAndDelete(id);

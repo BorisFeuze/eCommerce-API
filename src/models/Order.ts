@@ -4,14 +4,14 @@ const orderSchema = new Schema(
   {
     userId: {
       type: Schema.Types.ObjectId,
-      ref: 'User',
+      ref: 'user',
       required: [true, 'user ID is required']
     },
     products: [
       {
         productId: {
           type: Schema.Types.ObjectId,
-          ref: 'Product',
+          ref: 'product',
           required: [true, 'product ID is required']
         }
       },
@@ -24,7 +24,8 @@ const orderSchema = new Schema(
     ],
 
     total: {
-      type: Number
+      type: Number,
+      default: 0
     }
   },
   {

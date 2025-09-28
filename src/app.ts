@@ -12,8 +12,7 @@ app.use(express.json()); // Middleware logic
 app.use(
   cors({
     origin: process.env.CLIENT_BASE_URL, // for use with credentials, origin(s) need to be specified
-    credentials: true, // sends and receives secure cookies
-    exposedHeaders: ['WWW-Authenticate'] // needed to send the 'refresh trigger''
+    credentials: true // sends and receives secure cookies
   })
 );
 app.use('/users', userRouter);

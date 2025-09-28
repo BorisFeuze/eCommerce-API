@@ -1,6 +1,38 @@
-import { querySchema } from '#schemas/shared';
+import {
+  querySchema,
+  orderInputSchema,
+  orderSchema,
+  categoryInputSchema,
+  categorySchema,
+  productInputSchema,
+  productSchema,
+  userInputSchema,
+  userSchema
+} from '#schemas';
 import { z } from 'zod/v4';
 
 type QueryType = z.infer<typeof querySchema>;
 
-export type { QueryType };
+type OrderInputDTO = z.infer<typeof orderInputSchema>;
+type OrderDTO = z.infer<typeof orderSchema>;
+
+type CategoryInputDTO = z.infer<typeof categoryInputSchema>;
+type CategoryDTO = z.infer<typeof categorySchema>;
+
+type ProductInputDTO = z.infer<typeof productInputSchema>;
+type ProductDTO = z.infer<typeof productSchema>;
+
+type UserInputDTO = z.infer<typeof userInputSchema>;
+type UserDTO = z.infer<typeof userSchema>;
+
+export type {
+  QueryType,
+  OrderInputDTO,
+  OrderDTO,
+  CategoryDTO,
+  CategoryInputDTO,
+  ProductDTO,
+  ProductInputDTO,
+  UserDTO,
+  UserInputDTO
+};
