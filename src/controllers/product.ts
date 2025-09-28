@@ -2,39 +2,35 @@ import { Category, Product } from '#models';
 import type { RequestHandler } from 'express';
 import { isValidObjectId } from 'mongoose';
 import { ObjectId } from 'mongodb';
-import { productSchema, productInputSchema, productSchemaArray } from '#schemas';
-import { z } from 'zod/v4';
-
-type ProductInputDTO = z.infer<typeof productInputSchema>;
-type ProductDTO = z.infer<typeof productSchema>;
+import type { ProductDTO, ProductInputDTO } from '#types';
 
 const getProducts: RequestHandler = async (request, response) => {
   const categoryId = request.sanitQuery?.categoryId;
 
   let products: ProductDTO[];
-
   if (categoryId) {
-    products = await Product.find({ categoryId }).populate<ProductDTO>('categoryId', 'mame').lean();
+    products = await Product.find({ categoryId }).populate<ProductDTO>('categoryId', 'name').lean();
   } else {
-    products = await Product.find().populate<ProductDTO>('categoryId', 'mame').lean();
-  }
-  const { success, data, error } = productSchemaArray.safeParse(products);
-
-  if (!success) {
-    console.error(z.prettifyError(error));
+    products = await Product.find().populate<ProductDTO>('categoryId', 'name').lean();
   }
 
-  response.json({ message: 'List of products', data });
+  // const { success, data, error } = productSchemaArray.safeParse(products);
+
+  // if (!success) {
+  //   throw new Error(z.prettifyError(error), { cause: { status: 400 } });
+  // }
+
+  response.json({ message: 'List of products', /*data*/ products });
 };
 
-const createProduct: RequestHandler = async (request, response) => {
-  const { name, description, categoryId } = request.body;
+const createProduct: RequestHandler<{}, {}, ProductInputDTO> = async (request, response) => {
+  const { name, description, price, categoryId } = request.body;
 
   const categoryExists = await Category.exists({ _id: categoryId });
 
   if (!categoryExists) throw new Error('product_category do not exist', { cause: { status: 404 } });
 
-  const product = await Product.create<ProductInputDTO>({ name, description, categoryId });
+  const product = await Product.create<ProductInputDTO>({ name, description, price, categoryId });
 
   response.json({ message: 'product created' });
 };
@@ -54,13 +50,13 @@ const getProductById: RequestHandler<{ id: string }> = async (req, response) => 
     throw new Error('Product not found', { cause: { status: 404 } });
   }
 
-  const { success, data, error } = productSchemaArray.safeParse(product);
+  // const { success, data, error } = productSchemaArray.safeParse(product);
 
-  if (!success) {
-    console.error(z.prettifyError(error));
-  }
+  // if (!success) {
+  //   console.error(z.prettifyError(error));
+  // }
 
-  response.json({ message: 'searched product', data });
+  response.json({ message: 'searched product', /*data*/ product });
 };
 
 const updateProduct: RequestHandler<{ id: string }, {}, ProductInputDTO> = async (req, response) => {

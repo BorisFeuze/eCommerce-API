@@ -3,19 +3,20 @@ import { dbEntrySchema } from './shared.ts';
 import { isValidObjectId } from 'mongoose';
 
 const productItemSchema = z.strictObject({
-  productsId: z.string().refine(value => {
+  productId: z.string().refine(value => {
     return isValidObjectId(value);
-  }, 'Invalid product ID'),
-
-  quantity: z.number().min(0)
+  }, 'Invalid productID'),
+  quantity: z.coerce.number().min(0)
 });
+
+const productItemSchemaArray = z.array(productItemSchema);
 
 const orderInputSchema = z.strictObject({
   userId: z.string().refine(value => {
     return isValidObjectId(value);
   }, 'Invalid user ID'),
-  products: z.array(productItemSchema),
-  total: z.number().min(0)
+  products: productItemSchemaArray,
+  total: z.coerce.number().min(0).default(0)
 });
 
 const orderSchema = z
@@ -29,4 +30,6 @@ const orderSchema = z
     ...rest
   }));
 
-export { orderInputSchema, orderSchema };
+const orderSchemaArray = z.array(orderSchema);
+
+export { orderInputSchema, orderSchema, orderSchemaArray, productItemSchema };

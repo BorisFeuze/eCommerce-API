@@ -12,9 +12,13 @@ const productSchema = new Schema(
       required: [true, 'description is required'],
       trim: true
     },
+    price: {
+      type: Number,
+      required: [true, 'price is required']
+    },
     categoryId: {
       type: Schema.Types.ObjectId,
-      ref: 'Category',
+      ref: 'category',
       required: [true, 'category ID is required']
     }
   },

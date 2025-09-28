@@ -3,9 +3,7 @@ import type { RequestHandler } from 'express';
 import { isValidObjectId } from 'mongoose';
 import { z } from 'zod/v4';
 import { userSchema, userInputSchema, userSchemaArray } from '#schemas';
-
-type UserInputDTO = z.infer<typeof userInputSchema>;
-type UserDTO = z.infer<typeof userSchema>;
+import type { UserDTO, UserInputDTO } from '#types';
 
 const getUsers: RequestHandler = async (request, response) => {
   const users = await User.find().select('-password').lean();

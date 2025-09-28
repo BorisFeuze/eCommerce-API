@@ -1,11 +1,9 @@
 import { Category } from '#models';
 import type { RequestHandler } from 'express';
 import { isValidObjectId } from 'mongoose';
-import { categorySchema, categoryInputSchema, categorySchemaArray } from '#schemas';
+import { categorySchema, categorySchemaArray } from '#schemas';
+import type { CategoryDTO, CategoryInputDTO } from '#types';
 import { z } from 'zod/v4';
-
-type CategoryInputDTO = z.infer<typeof categoryInputSchema>;
-type CategoryDTO = z.infer<typeof categorySchema>;
 
 const getCategories: RequestHandler = async (request, response) => {
   const categories = await Category.find().lean();
@@ -77,7 +75,7 @@ const updateCategory: RequestHandler<{ id: string }> = async (request, response)
     console.error(z.prettifyError(error));
   }
 
-  response.json({ message: 'category updated' });
+  response.json({ message: 'category updated', data });
 };
 
 const deleteCategory: RequestHandler<{ id: string }, { message: string }> = async (request, response) => {
