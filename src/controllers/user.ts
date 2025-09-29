@@ -8,13 +8,7 @@ import type { UserDTO, UserInputDTO } from '#types';
 const getUsers: RequestHandler = async (request, response) => {
   const users = await User.find().select('-password').lean();
 
-  const { success, data, error } = userSchemaArray.safeParse(users);
-
-  if (!success) {
-    console.error(z.prettifyError(error));
-  }
-
-  response.json({ massege: 'List of users', data });
+  response.json({ massege: 'List of users', users });
 };
 
 const createUser: RequestHandler<{}, {}, UserInputDTO> = async (request, response) => {
@@ -43,13 +37,7 @@ const getUserById: RequestHandler<{ id: string }> = async (request, response) =>
     throw new Error('User not found', { cause: { status: 404 } });
   }
 
-  const { success, data, error } = userSchema.safeParse(user);
-
-  if (!success) {
-    console.error(z.prettifyError(error));
-  }
-
-  response.json({ message: 'searched user', data });
+  response.json({ message: 'searched user', user });
 };
 
 const updateUser: RequestHandler<{ id: string }> = async (request, response) => {

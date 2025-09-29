@@ -8,13 +8,7 @@ import { z } from 'zod/v4';
 const getCategories: RequestHandler = async (request, response) => {
   const categories = await Category.find().lean();
 
-  const { success, data, error } = categorySchemaArray.safeParse(categories);
-
-  if (!success) {
-    console.error(z.prettifyError(error));
-  }
-
-  response.json({ message: 'List of Categories', data });
+  response.json({ message: 'List of Categories', categories });
 };
 
 const createCategory: RequestHandler<{}, {}, CategoryInputDTO> = async (request, response) => {
@@ -40,13 +34,7 @@ const getCategoryById: RequestHandler<{ id: string }> = async (request, response
     throw new Error('Category not found', { cause: { status: 404 } });
   }
 
-  const { success, data, error } = categorySchema.safeParse(category);
-
-  if (!success) {
-    console.error(z.prettifyError(error));
-  }
-
-  response.json({ message: 'searched category', data });
+  response.json({ message: 'searched category', category });
 };
 
 const updateCategory: RequestHandler<{ id: string }> = async (request, response) => {
@@ -69,13 +57,7 @@ const updateCategory: RequestHandler<{ id: string }> = async (request, response)
 
   await category.save();
 
-  const { success, data, error } = categorySchema.safeParse(category);
-
-  if (!success) {
-    console.error(z.prettifyError(error));
-  }
-
-  response.json({ message: 'category updated', data });
+  response.json({ message: 'category updated', category });
 };
 
 const deleteCategory: RequestHandler<{ id: string }, { message: string }> = async (request, response) => {

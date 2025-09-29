@@ -3,8 +3,6 @@ import type { RequestHandler } from 'express';
 import { isValidObjectId } from 'mongoose';
 import { ObjectId } from 'mongodb';
 import type { ProductDTO, ProductInputDTO } from '#types';
-import { productSchemaArray } from '#schemas';
-import z from 'zod/v4';
 
 const getProducts: RequestHandler = async (request, response) => {
   const categoryId = request.sanitQuery?.categoryId;
@@ -16,9 +14,7 @@ const getProducts: RequestHandler = async (request, response) => {
     products = await Product.find().populate<ProductDTO>('categoryId', 'name').lean();
   }
 
-  const validedProducts = productSchemaArray.parse(products);
-
-  response.json({ message: 'List of products', validedProducts });
+  response.json({ message: 'List of products', products });
 };
 
 const createProduct: RequestHandler<{}, {}, ProductInputDTO> = async (request, response) => {
@@ -48,13 +44,7 @@ const getProductById: RequestHandler<{ id: string }> = async (req, response) => 
     throw new Error('Product not found', { cause: { status: 404 } });
   }
 
-  // const { success, data, error } = productSchemaArray.safeParse(product);
-
-  // if (!success) {
-  //   console.error(z.prettifyError(error));
-  // }
-
-  response.json({ message: 'searched product', /*data*/ product });
+  response.json({ message: 'searched product', product });
 };
 
 const updateProduct: RequestHandler<{ id: string }, {}, ProductInputDTO> = async (req, response) => {
