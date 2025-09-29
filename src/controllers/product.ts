@@ -3,6 +3,8 @@ import type { RequestHandler } from 'express';
 import { isValidObjectId } from 'mongoose';
 import { ObjectId } from 'mongodb';
 import type { ProductDTO, ProductInputDTO } from '#types';
+import { productSchemaArray } from '#schemas';
+import z from 'zod/v4';
 
 const getProducts: RequestHandler = async (request, response) => {
   const categoryId = request.sanitQuery?.categoryId;
@@ -14,13 +16,9 @@ const getProducts: RequestHandler = async (request, response) => {
     products = await Product.find().populate<ProductDTO>('categoryId', 'name').lean();
   }
 
-  // const { success, data, error } = productSchemaArray.safeParse(products);
+  const validedProducts = productSchemaArray.parse(products);
 
-  // if (!success) {
-  //   throw new Error(z.prettifyError(error), { cause: { status: 400 } });
-  // }
-
-  response.json({ message: 'List of products', /*data*/ products });
+  response.json({ message: 'List of products', validedProducts });
 };
 
 const createProduct: RequestHandler<{}, {}, ProductInputDTO> = async (request, response) => {

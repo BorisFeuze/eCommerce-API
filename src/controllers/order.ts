@@ -24,7 +24,7 @@ const createOrder: RequestHandler<{}, {}, OrderInputDTO> = async (request, respo
   const {
     body: { userId, products, total }
   } = request;
-  console.log(request.body);
+  // console.log(...request.body);
   const _id = userId;
 
   const userExists = await User.exists({ _id });
@@ -49,7 +49,7 @@ const createOrder: RequestHandler<{}, {}, OrderInputDTO> = async (request, respo
     totalCost += quantity * Number(price);
   }
 
-  const order = await Order.create({ ...request.body, total: totalCost });
+  const order = await Order.create({ userId, products, total: totalCost });
 
   const populatedOrder = await order.populate('products.productId', 'name price');
 

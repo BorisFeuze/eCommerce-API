@@ -9,9 +9,12 @@ const productInputSchema = z.strictObject({
 
   price: z.coerce.number(),
 
-  categoryId: z.string().refine(value => {
-    return isValidObjectId(value);
-  }, 'Invalid categoryID')
+  categoryId: z
+    .string()
+    .min(1)
+    .refine(value => {
+      return isValidObjectId(value);
+    }, 'Invalid categoryID')
 });
 
 const productSchema = z
