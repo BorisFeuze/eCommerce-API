@@ -4,6 +4,7 @@ import z from 'zod/v4';
 
 type ValidationOptions = 'body' | 'params' | 'query';
 
+
 const validateZod = (ZodSchema: ZodObject, property: ValidationOptions): RequestHandler => {
   return (request, response, next) => {
     if (!request[property])
