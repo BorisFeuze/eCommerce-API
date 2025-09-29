@@ -1,5 +1,5 @@
 import { z } from 'zod/v4';
-import { isValidObjectId, Types } from 'mongoose';
+import mongoose, { isValidObjectId, Types } from 'mongoose';
 import { dbEntrySchema } from './shared.ts';
 
 const productInputSchema = z.strictObject({
@@ -20,7 +20,7 @@ const productInputSchema = z.strictObject({
 const productSchema = z
   .strictObject({
     ...productInputSchema.shape,
-    categoryId: z.instanceof(Types.ObjectId),
+    categoryId: z.custom<Types.ObjectId>(val => val instanceof Types.ObjectId),
     ...dbEntrySchema.shape
   })
   .transform(({ _id, ...rest }) => ({

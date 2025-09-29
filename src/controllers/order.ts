@@ -12,19 +12,14 @@ const getOrders: RequestHandler = async (request, response) => {
     .populate('products.productId', 'name price')
     .lean();
 
-  const { success, data, error } = orderSchemaArray.safeParse(orders);
-
-  if (!success) {
-    throw new Error(z.prettifyError(error), { cause: { status: 400 } });
-  }
-  response.json({ message: 'List of products', data /*orders*/ });
+  response.json({ message: 'List of products', orders });
 };
 
 const createOrder: RequestHandler<{}, {}, OrderInputDTO> = async (request, response) => {
   const {
     body: { userId, products, total }
   } = request;
-  // console.log(...request.body);
+  // console.log(request.body);
   const _id = userId;
 
   const userExists = await User.exists({ _id });
@@ -42,18 +37,18 @@ const createOrder: RequestHandler<{}, {}, OrderInputDTO> = async (request, respo
 
     // console.log(productExists);
 
-    const { price } = await Product.findById<ProductInputDTO>({ _id });
+    const searchP = await Product.findById<ProductInputDTO>({ _id });
 
     // console.log(price);
 
-    totalCost += quantity * Number(price);
+    totalCost += quantity * Number(searchP?.price);
   }
 
   const order = await Order.create({ userId, products, total: totalCost });
 
   const populatedOrder = await order.populate('products.productId', 'name price');
 
-  console.log(populatedOrder);
+  // console.log(populatedOrder);
 
   response.json({ message: 'order created' });
 };
@@ -73,18 +68,16 @@ const getOrderById: RequestHandler<{ id: string }> = async (request, response) =
     throw new Error('Order not found', { cause: { status: 404 } });
   }
 
-  const { success, data, error } = orderSchema.safeParse(order);
-
-  if (!success) {
-    console.error(z.prettifyError(error));
-  }
-
-  response.json({ message: 'searched product', data });
+  response.json({ message: 'searched product', order });
 };
 
 const updateOrder: RequestHandler<{ id: string }, {}, OrderInputDTO> = async (request, response) => {
   const {
-    body: { userId, products, total },
+    body: {
+      userId,
+      products: [{ productId, quantity }],
+      total
+    },
     params: { id }
   } = request;
 
@@ -103,7 +96,8 @@ const updateOrder: RequestHandler<{ id: string }, {}, OrderInputDTO> = async (re
   }
 
   order.userId = ObjectId.createFromHexString(userId);
-  order.products = products[{ productId, quantity }];
+  order.products[productId] = productId;
+  order.products[quantity] = quantity;
   order.total = total;
 
   await order.save();
