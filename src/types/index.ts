@@ -7,7 +7,8 @@ import {
   productInputSchema,
   productSchema,
   userInputSchema,
-  userSchema
+  userSchema,
+  productItemSchema
 } from '#schemas';
 import { z } from 'zod/v4';
 
@@ -24,6 +25,9 @@ type ProductDTO = z.infer<typeof productSchema>;
 
 type UserInputDTO = z.infer<typeof userInputSchema>;
 type UserDTO = z.infer<typeof userSchema>;
+type SuccessMg = { message: string };
+
+type ProductsType = z.infer<typeof productItemSchema>;
 
 export type {
   QueryType,
@@ -34,5 +38,7 @@ export type {
   ProductDTO,
   ProductInputDTO,
   UserDTO,
-  UserInputDTO
+  UserInputDTO,
+  SuccessMg,
+  ProductsType
 };

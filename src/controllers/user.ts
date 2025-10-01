@@ -1,17 +1,21 @@
 import { User } from '#models';
 import type { RequestHandler } from 'express';
 import { isValidObjectId } from 'mongoose';
-import { z } from 'zod/v4';
-import { userSchema, userInputSchema, userSchemaArray } from '#schemas';
-import type { UserDTO, UserInputDTO } from '#types';
+import type { z } from 'zod/v4';
+import { userSchemaArray, userByIdSchema } from '#schemas';
+import type { UserInputDTO, SuccessMg } from '#types';
 
-const getUsers: RequestHandler = async (request, response) => {
+type GetUsersType = SuccessMg & { users: z.infer<typeof userSchemaArray> };
+
+type GetUserType = SuccessMg & { user: z.infer<typeof userByIdSchema> };
+
+const getUsers: RequestHandler<{}, GetUsersType> = async (request, response) => {
   const users = await User.find().select('-password').lean();
 
-  response.json({ massege: 'List of users', users });
+  response.json({ message: 'List of users', users });
 };
 
-const createUser: RequestHandler<{}, {}, UserInputDTO> = async (request, response) => {
+const createUser: RequestHandler<{}, SuccessMg, UserInputDTO> = async (request, response) => {
   const { name, email, password } = request.body;
 
   const found = await User.findOne({ email });
@@ -23,7 +27,7 @@ const createUser: RequestHandler<{}, {}, UserInputDTO> = async (request, respons
   response.json({ message: 'user created' });
 };
 
-const getUserById: RequestHandler<{ id: string }> = async (request, response) => {
+const getUserById: RequestHandler<{ id: string }, GetUserType> = async (request, response) => {
   const {
     params: { id }
   } = request;
@@ -40,7 +44,7 @@ const getUserById: RequestHandler<{ id: string }> = async (request, response) =>
   response.json({ message: 'searched user', user });
 };
 
-const updateUser: RequestHandler<{ id: string }> = async (request, response) => {
+const updateUser: RequestHandler<{ id: string }, SuccessMg> = async (request, response) => {
   const {
     body: { email, password, name },
     params: { id }
@@ -65,7 +69,7 @@ const updateUser: RequestHandler<{ id: string }> = async (request, response) => 
   response.json({ message: 'user updated' });
 };
 
-const deleteUser: RequestHandler<{ id: string }, { message: string }> = async (request, response) => {
+const deleteUser: RequestHandler<{ id: string }, SuccessMg> = async (request, response) => {
   const {
     params: { id }
   } = request;

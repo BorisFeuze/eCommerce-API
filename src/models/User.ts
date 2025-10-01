@@ -1,13 +1,16 @@
 import { Schema, model } from 'mongoose';
+import { required } from 'zod/v4-mini';
 
 const userSchema = new Schema(
   {
     name: {
       type: String,
+      required: [true, 'name is required'],
       trim: true
     },
     email: {
       type: String,
+      required: [true, 'email is required'],
       unique: true,
       trim: true,
       match: [/^\S+@\S+\.\S+$/, 'Email is not valid']
