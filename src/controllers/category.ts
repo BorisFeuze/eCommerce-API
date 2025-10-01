@@ -1,11 +1,14 @@
 import { Category } from '#models';
 import type { RequestHandler } from 'express';
 import { isValidObjectId } from 'mongoose';
-import { categorySchema, categorySchemaArray } from '#schemas';
-import type { CategoryDTO, CategoryInputDTO } from '#types';
-import { z } from 'zod/v4';
+import { categorySchemaArray } from '#schemas';
+import type { CategoryDTO, CategoryInputDTO, SuccessMg } from '#types';
+import type z from 'zod/v4';
 
-const getCategories: RequestHandler = async (request, response) => {
+type GetCategoryType = SuccessMg & { category: CategoryDTO };
+type GetAllCategoryType = SuccessMg & { categories: z.infer<typeof categorySchemaArray> };
+
+const getCategories: RequestHandler<{}, GetAllCategoryType> = async (request, response) => {
   const categories = await Category.find().lean();
 
   response.json({ message: 'List of Categories', categories });
@@ -13,7 +16,7 @@ const getCategories: RequestHandler = async (request, response) => {
 
 };
 
-const createCategory: RequestHandler<{}, {}, CategoryInputDTO> = async (request, response) => {
+const createCategory: RequestHandler<{}, SuccessMg, CategoryInputDTO> = async (request, response) => {
   const { name } = request.body;
 
   const category = await Category.create<CategoryInputDTO>({ name });
@@ -21,7 +24,7 @@ const createCategory: RequestHandler<{}, {}, CategoryInputDTO> = async (request,
   response.json({ message: 'category created' });
 };
 
-const getCategoryById: RequestHandler<{ id: string }> = async (request, response) => {
+const getCategoryById: RequestHandler<{ id: string }, GetCategoryType> = async (request, response) => {
   const {
     params: { id }
   } = request;
@@ -39,7 +42,7 @@ const getCategoryById: RequestHandler<{ id: string }> = async (request, response
   response.json({ message: 'searched category', category });
 };
 
-const updateCategory: RequestHandler<{ id: string }> = async (request, response) => {
+const updateCategory: RequestHandler<{ id: string }, GetCategoryType> = async (request, response) => {
   const {
     body: { name },
     params: { id }
@@ -62,7 +65,7 @@ const updateCategory: RequestHandler<{ id: string }> = async (request, response)
   response.json({ message: 'category updated', category });
 };
 
-const deleteCategory: RequestHandler<{ id: string }, { message: string }> = async (request, response) => {
+const deleteCategory: RequestHandler<{ id: string }, SuccessMg> = async (request, response) => {
   const {
     params: { id }
   } = request;

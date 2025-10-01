@@ -1,6 +1,8 @@
 import z from 'zod/v4';
 import { dbEntrySchema } from './shared.ts';
-import { isValidObjectId } from 'mongoose';
+import { isValidObjectId, Types } from 'mongoose';
+import { userSchema } from './zodusers.ts';
+import { productInputSchema } from './zodproduct.ts';
 
 const productItemSchema = z.strictObject({
   productId: z.string().refine(value => {
@@ -19,17 +21,33 @@ const orderInputSchema = z.strictObject({
   total: z.coerce.number().min(0).default(0)
 });
 
-const orderSchema = z
-  .strictObject({
-    ...orderInputSchema.shape,
-    ...dbEntrySchema.shape,
-    updatedAt: z.date()
-  })
-  .transform(({ _id, ...rest }) => ({
-    id: _id,
-    ...rest
-  }));
+const orderSchema = z.strictObject({
+  ...orderInputSchema.shape,
+  products: [{ productId: z.instanceof(Types.ObjectId), quantity: z.coerce.number().min(0) }],
+  userId: z.instanceof(Types.ObjectId),
+  ...dbEntrySchema.shape,
+  updatedAt: z.date()
+});
+
+const populatedUserSchema = z.strictObject({
+  ...userSchema.shape,
+  _id: z.instanceof(Types.ObjectId)
+});
+
+const populatedProductSchema = z.strictObject({
+  ...productInputSchema.shape,
+  categoryId: z.instanceof(Types.ObjectId),
+  _id: z.instanceof(Types.ObjectId)
+});
 
 const orderSchemaArray = z.array(orderSchema);
 
-export { orderInputSchema, orderSchema, orderSchemaArray, productItemSchema };
+export {
+  orderInputSchema,
+  orderSchema,
+  orderSchemaArray,
+  productItemSchema,
+  productItemSchemaArray,
+  populatedUserSchema,
+  populatedProductSchema
+};

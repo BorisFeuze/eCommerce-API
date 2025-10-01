@@ -2,22 +2,30 @@ import { Category, Product } from '#models';
 import type { RequestHandler } from 'express';
 import { isValidObjectId } from 'mongoose';
 import { ObjectId } from 'mongodb';
-import type { ProductDTO, ProductInputDTO } from '#types';
+import { productSchema, populatedCategorySchema } from '#schemas';
+import type { ProductDTO, ProductInputDTO, SuccessMg } from '#types';
+import type z from 'zod/v4-mini';
 
-const getProducts: RequestHandler = async (request, response) => {
+type Products = SuccessMg & { products: z.infer<typeof productSchema>[] };
+type PopulatedCategoryDTO = z.infer<typeof populatedCategorySchema>;
+type ProductType = SuccessMg & { product: ProductDTO };
+
+const getProducts: RequestHandler<{}, Products> = async (request, response) => {
   const categoryId = request.sanitQuery?.categoryId;
 
-  let products: ProductDTO[];
+  let products: z.infer<typeof productSchema>[];
   if (categoryId) {
-    products = await Product.find({ categoryId }).populate<ProductDTO>('categoryId', 'name').lean();
+    products = await Product.find({ categoryId })
+      .populate<{ category: PopulatedCategoryDTO }>('categoryId', 'name')
+      .lean();
   } else {
-    products = await Product.find().populate<ProductDTO>('categoryId', 'name').lean();
+    products = await Product.find().populate<{ category: PopulatedCategoryDTO }>('categoryId', 'name').lean();
   }
 
   response.json({ message: 'List of products', products });
 };
 
-const createProduct: RequestHandler<{}, {}, ProductInputDTO> = async (request, response) => {
+const createProduct: RequestHandler<{}, SuccessMg, ProductInputDTO> = async (request, response) => {
   const { name, description, price, categoryId } = request.body;
 
   const categoryExists = await Category.exists({ _id: categoryId });
@@ -29,7 +37,7 @@ const createProduct: RequestHandler<{}, {}, ProductInputDTO> = async (request, r
   response.json({ message: 'product created' });
 };
 
-const getProductById: RequestHandler<{ id: string }> = async (req, response) => {
+const getProductById: RequestHandler<{ id: string }, ProductType, ProductDTO> = async (req, response) => {
   const {
     params: { id }
   } = req;
@@ -47,7 +55,7 @@ const getProductById: RequestHandler<{ id: string }> = async (req, response) => 
   response.json({ message: 'searched product', product });
 };
 
-const updateProduct: RequestHandler<{ id: string }, {}, ProductInputDTO> = async (req, response) => {
+const updateProduct: RequestHandler<{ id: string }, SuccessMg, ProductInputDTO> = async (req, response) => {
   const {
     body: { name, description, categoryId },
     params: { id }
@@ -76,7 +84,7 @@ const updateProduct: RequestHandler<{ id: string }, {}, ProductInputDTO> = async
   response.json({ message: 'product updated' });
 };
 
-const deleteProduct: RequestHandler<{ id: string }, { message: string }> = async (req, response) => {
+const deleteProduct: RequestHandler<{ id: string }, SuccessMg> = async (req, response) => {
   const {
     params: { id }
   } = req;
