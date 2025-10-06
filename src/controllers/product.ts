@@ -4,7 +4,7 @@ import { isValidObjectId } from 'mongoose';
 import { ObjectId } from 'mongodb';
 import { productSchema, populatedCategorySchema } from '#schemas';
 import type { ProductDTO, ProductInputDTO, SuccessMg } from '#types';
-import type z from 'zod/v4-mini';
+import type z from 'zod/v4';
 
 type Products = SuccessMg & { products: z.infer<typeof productSchema>[] };
 type PopulatedCategoryDTO = z.infer<typeof populatedCategorySchema>;
@@ -57,7 +57,7 @@ const getProductById: RequestHandler<{ id: string }, ProductType, ProductDTO> = 
 
 const updateProduct: RequestHandler<{ id: string }, SuccessMg, ProductInputDTO> = async (req, response) => {
   const {
-    body: { name, description, categoryId },
+    body: { name, description, categoryId, price },
     params: { id }
   } = req;
 
@@ -78,8 +78,11 @@ const updateProduct: RequestHandler<{ id: string }, SuccessMg, ProductInputDTO> 
   product.name = name;
   product.description = description;
   product.categoryId = ObjectId.createFromHexString(categoryId);
+  product.price = price;
 
   await product.save();
+
+  // console.log(product);
 
   response.json({ message: 'product updated' });
 };

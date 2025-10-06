@@ -5,7 +5,7 @@
   "main": "dist/app.js",
   "type": "module",
   "scripts": {
-    "dev": "node --watch  --env-file=.env.development.local --experimental-transform-types --disable-warning=ExperimentalWarning --conditions development src/app.ts",
+    "dev": "node --watch  --env-file=.env --experimental-transform-types --disable-warning=ExperimentalWarning --conditions development src/app.ts",
     "prebuild": "rm -rf dist",
     "build": "tsc",
     "prestart": "npm run build",
