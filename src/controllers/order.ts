@@ -48,7 +48,7 @@ const createOrder: RequestHandler<{}, SuccessMg, OrderInputDTO> = async (request
     totalCost += quantity * Number(searchP?.price);
   }
 
-  const order = await Order.create<OrderInputDTO>({ userId, products, total: totalCost });
+  const order = await Order.create<OrderInputDTO>({ userId, products, total: totalCost / 100 });
 
   const populatedOrder = await order.populate<{ products: PopulatedProductDTO }>('products.productId', 'name price');
 
@@ -120,7 +120,7 @@ const updateOrder: RequestHandler<{ id: string }, SuccessMg, OrderInputDTO> = as
 
   order.userId = ObjectId.createFromHexString(userId);
   order.products.push({ productId: ObjectId.createFromHexString(productId), quantity: quantity });
-  order.total = totalCost;
+  order.total = totalCost / 100;
 
   await order.save();
 
