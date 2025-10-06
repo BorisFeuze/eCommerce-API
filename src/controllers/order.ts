@@ -48,7 +48,7 @@ const createOrder: RequestHandler<{}, SuccessMg, OrderInputDTO> = async (request
     totalCost += quantity * Number(searchP?.price);
   }
 
-  const order = await Order.create<OrderInputDTO>({ userId, products, total: totalCost / 100 });
+  const order = await Order.create<OrderInputDTO>({ userId, products, total: totalCost/100 });
 
   const populatedOrder = await order.populate<{ products: PopulatedProductDTO }>('products.productId', 'name price');
 

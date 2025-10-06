@@ -12,6 +12,8 @@ const getCategories: RequestHandler<{}, GetAllCategoryType> = async (request, re
   const categories = await Category.find().lean();
 
   response.json({ message: 'List of Categories', categories });
+
+
 };
 
 const createCategory: RequestHandler<{}, SuccessMg, CategoryInputDTO> = async (request, response) => {
